@@ -1,2 +1,4 @@
 .idea
 venv
+post_test.txt
+*.pyc
