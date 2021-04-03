@@ -1,11 +1,13 @@
 # coding: utf-8
 from flask import Flask
 from flask import request, jsonify
+from flask_cors import CORS, cross_origin
 from OthelloLogic import getMoves, getReverseboard, execute
 from OthelloAction import getAction
 from copy import deepcopy
 
 app = Flask(__name__)
+CORS(app, support_credentials=True)
 
 
 def posted_board(num):
@@ -33,16 +35,19 @@ def posted_board(num):
 
 
 @app.route('/')
+@cross_origin(support_credentials=True)
 def index():
     return 'OthelloArenaAPI'
 
 
 @app.route('/get', methods=['GET'])
+@cross_origin(support_credentials=True)
 def get():
     return "a"
 
 
 @app.route('/post', methods=['POST'])
+@cross_origin(support_credentials=True)
 def post():
     board = posted_board(request.form['num'])
     if isinstance(board, str):
@@ -58,6 +63,7 @@ def post():
 
 
 @app.route('/get_moves', methods=['POST'])
+@cross_origin(support_credentials=True)
 def get_moves():
     board = posted_board(request.form['num'])
     if isinstance(board, str):
