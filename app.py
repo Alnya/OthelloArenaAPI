@@ -82,7 +82,7 @@ def player_execute():
     if isinstance(board, str):
         return board
     action = int(request.form['action'])
-    action = [action // 8, action % 8]
+    action = [action % 8, action // 8]
     board = execute(board=deepcopy(board), action=action, player=1, size=8)
     data = {
         'board': board
@@ -91,5 +91,5 @@ def player_execute():
 
 
 if __name__ == '__main__':
-    # app.run(host='0.0.0.0', debug=False)
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=False)
+    # app.run(debug=True)
