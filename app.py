@@ -53,6 +53,12 @@ def post():
     if isinstance(board, str):
         return board
     moves = getMoves(board=deepcopy(board), player=-1, size=8)
+    if len(moves) == 0:
+        data = {
+            'action': [],
+            'board': board
+        }
+        return data
     action = getAction(board=deepcopy(board), moves=moves)
     board = execute(board=deepcopy(board), action=action, player=-1, size=8)
     data = {
