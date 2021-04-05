@@ -25,7 +25,7 @@ def getAction(board, moves):
     print("--------------------------------------------------")
     print(f"turn: {turn}")
 
-    if 46 <= turn <= 47:
+    if 48 <= turn <= 49:
         if len(moves) < 3:
             return complete_main(board, moves, turn, start_time)
     if turn == 2:
@@ -40,7 +40,7 @@ def getAction(board, moves):
             return t3
     if turn < 15:
         return open_rate_main(board, moves, turn, start_time)
-    elif turn < 48:
+    elif turn < 50:
         return middle_main(board, moves, turn, start_time)
     else:
         return complete_main(board, moves, turn, start_time)
