@@ -96,6 +96,20 @@ def player_execute():
     return jsonify(data)
 
 
+@app.route('/check', methods=['POST'])
+@cross_origin(support_credentials=True)
+def check():
+    board = posted_board(request.form['num'])
+    if isinstance(board, str):
+        return board
+    player_moves = getMoves(board=deepcopy(board), player=1, size=8)
+    alnya_moves = getMoves(board=deepcopy(board), player=-1, size=8)
+    if len(player_moves) == 0 and len(alnya_moves) == 0:
+        return 0
+    else:
+        return 1
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=False)
     # app.run(debug=True)
