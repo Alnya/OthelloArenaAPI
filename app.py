@@ -2,7 +2,7 @@
 from flask import Flask
 from flask import request, jsonify
 from flask_cors import CORS, cross_origin
-from OthelloLogic import getMoves, getReverseboard, execute
+from OthelloLogic import getMoves, execute
 from OthelloAction import getAction
 from copy import deepcopy
 
@@ -75,6 +75,21 @@ def get_moves():
     return jsonify(data)
 
 
+@app.route('/player_execute', methods=['POST'])
+@cross_origin(support_credentials=True)
+def player_execute():
+    board = posted_board(request.form['num'])
+    if isinstance(board, str):
+        return board
+    action = int(request.form['action'])
+    action = [action // 8, action % 8]
+    board = execute(board=deepcopy(board), action=action, player=1, size=8)
+    data = {
+        'board': board
+    }
+    return jsonify(data)
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False)
-    # app.run(debug=True)
+    # app.run(host='0.0.0.0', debug=False)
+    app.run(debug=True)
