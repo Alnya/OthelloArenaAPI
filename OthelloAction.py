@@ -22,26 +22,49 @@ def getAction(board, moves):
         turn -= i.count(0)
     # 先手turn:1 後手turn:2
 
-    print("--------------------------------------------------")
-    print(f"turn: {turn}")
+    dangers = [
+        [1, 0],
+        [1, 1],
+        [0, 1],
+
+        [1, 7],
+        [0, 6],
+        [1, 6],
+
+        [7, 6],
+        [6, 6],
+        [6, 7],
+
+        [6, 0],
+        [7, 1],
+        [6, 1]
+    ]
+
+    # print("--------------------------------------------------")
+    # print(f"turn: {turn}")
 
     if 48 <= turn <= 49:
-        if len(moves) < 3:
+        if len(moves) < 2:
             return complete_main(board, moves, turn, start_time)
     if turn == 2:
         t2 = turn2(board)
         if t2 is not None and t2 in moves:
-            print(f"縦取り成功!\\(^_^)/")
+            # print(f"縦取り成功!\\(^_^)/")
             return t2
     if turn == 3:
         t3 = turn3(board)
         if t3 is not None and t3 in moves:
-            print(f"兎定石だ!\\('o')/")
+            # print(f"兎定石だ!\\('o')/")
             return t3
     if turn < 15:
         return open_rate_main(board, moves, turn, start_time)
-    elif turn < 50:
-        return middle_main(board, moves, turn, start_time)
+    # elif turn < 50:
+    #     return middle_main(board, moves, turn, start_time)
+    elif 44 <= turn < 50:
+        move = middle_main(board, moves, turn, start_time)
+        if move in dangers:
+            return max_move(board, moves)
+        return move
     else:
         return complete_main(board, moves, turn, start_time)
 
@@ -49,38 +72,38 @@ def getAction(board, moves):
 def complete_main(board, moves, turn, start_time):
     move, rate = complete(board, moves, turn, 1)
     if rate == 0:
-        print(f"theory_rate: 0.00 %\nSo, I changed the algorithm.")
+        # print(f"theory_rate: 0.00 %\nSo, I changed the algorithm.")
         return middle_main(board, moves, turn, start_time)
     else:
-        print(f"turn: {turn}\ntheory_rate: {rate * 100:.2f} %")
-        print(f"time: {time.time() - start_time:.2f} sec.")
-        print(f"move: {move}")
-        print(f"len(moves): {len(moves)}")
+        # print(f"turn: {turn}\ntheory_rate: {rate * 100:.2f} %")
+        # print(f"time: {time.time() - start_time:.2f} sec.")
+        # print(f"move: {move}")
+        # print(f"len(moves): {len(moves)}")
         return move
 
 
 def middle_main(board, moves, turn, start_time):
     move, message = middle_check(board, moves)
-    if message == "middle_check!":
-        print(f"turn: {turn}\nmiddle_check: {message}")
-    elif type(message) == str:
-        print(f"turn: {turn}\n{message}")
-    else:
-        print(f"turn: {turn}\nopen_rate: {message} points")
-    print(f"time: {time.time() - start_time:.2f} sec.")
-    print(f"move: {move}")
-    print(f"len(moves): {len(moves)}")
+    # if message == "middle_check!":
+    #     print(f"turn: {turn}\nmiddle_check: {message}")
+    # elif type(message) == str:
+    #     print(f"turn: {turn}\n{message}")
+    # else:
+    #     print(f"turn: {turn}\nopen_rate: {message} points")
+    # print(f"time: {time.time() - start_time:.2f} sec.")
+    # print(f"move: {move}")
+    # print(f"len(moves): {len(moves)}")
     return move
 
 
 def open_rate_main(board, moves, turn, start_time):
     move, rate = open_rate(board, moves)
-    if type(rate) == str:
-        print(f"turn: {turn}\n{rate}")
-    else:
-        print(f"turn: {turn}\nopen_rate: {rate} points")
-    print(f"time: {time.time() - start_time:.2f} sec.")
-    print(f"move: {move}")
+    # if type(rate) == str:
+    #     print(f"turn: {turn}\n{rate}")
+    # else:
+    #     print(f"turn: {turn}\nopen_rate: {rate} points")
+    # print(f"time: {time.time() - start_time:.2f} sec.")
+    # print(f"move: {move}")
     return move
 
 
@@ -423,3 +446,21 @@ def turn3(board):
         if board[t3b[i][0]][t3b[i][1]] != 0:
             return t3l[i]
     return None
+
+
+def max_move(board, moves):
+    ans_move = moves[0]
+    max_score = get_score(Ol.execute(board=copy.deepcopy(board), action=moves[0], player=1, size=8))
+    for move in moves:
+        score = get_score(Ol.execute(board=copy.deepcopy(board), action=move, player=1, size=8))
+        if max_score < score:
+            max_score = score
+            ans_move = move
+    return ans_move
+
+
+def get_score(board):
+    score = 0
+    for i in board:
+        score += i.count(1)
+    return score
