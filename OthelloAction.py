@@ -58,6 +58,8 @@ def getAction(board, moves):
             return t3
     if turn < 15:
         return open_rate_main(board, moves, turn, start_time)
+    elif turn < 44:
+        return middle_main(board, moves, turn, start_time)
     elif turn < 50:
         move = middle_main(board, moves, turn, start_time)
         if move in dangers:
