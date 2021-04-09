@@ -52,13 +52,14 @@ def post():
     board = posted_board(request.form['num'])
     if isinstance(board, str):
         return board
-    moves = getMoves(board=deepcopy(board), player=-1, size=8)
+    # moves = getMoves(board=deepcopy(board), player=-1, size=8)
+    moves = getMoves(board=getReverseboard(deepcopy(board)), player=1, size=8)
     if len(moves) == 0:
         data = {
             'action': [],
             'board': board
         }
-        return data
+        return jsonify(data)
     # action = getAction(board=deepcopy(board), moves=moves)
     action = getAction(board=getReverseboard(deepcopy(board)), moves=moves)
     board = execute(board=deepcopy(board), action=action, player=-1, size=8)
