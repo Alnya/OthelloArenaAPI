@@ -2,7 +2,7 @@
 from flask import Flask
 from flask import request, jsonify
 from flask_cors import CORS, cross_origin
-from OthelloLogic import getMoves, execute
+from OthelloLogic import getMoves, execute, getReverseboard
 from OthelloAction import getAction
 from copy import deepcopy
 
@@ -59,7 +59,8 @@ def post():
             'board': board
         }
         return data
-    action = getAction(board=deepcopy(board), moves=moves)
+    # action = getAction(board=deepcopy(board), moves=moves)
+    action = getAction(board=getReverseboard(deepcopy(board)), moves=moves)
     board = execute(board=deepcopy(board), action=action, player=-1, size=8)
     data = {
         'action': action,
