@@ -1,4 +1,5 @@
 # coding: utf-8
+
 from flask import Flask
 from flask import request, jsonify
 from flask_cors import CORS, cross_origin
@@ -11,6 +12,14 @@ CORS(app, support_credentials=True)
 
 
 def posted_board(num):
+    """
+    フロントエンドから送られてきた盤面を整形する。
+
+    :param num: 盤面情報の数列
+    :type num: str
+    :return: 盤面情報を二次元リストに整形したもの
+    :rtype: list of list of int
+    """
     error_message = "ValidationError"
     ls = []
     str_num = str(num)
@@ -43,16 +52,24 @@ def index():
 @app.route('/get', methods=['GET'])
 @cross_origin(support_credentials=True)
 def get():
+    """
+    Herokuを起動させるための軽量通信用エンドポイント。
+    """
     return "a"
 
 
 @app.route('/post', methods=['POST'])
 @cross_origin(support_credentials=True)
 def post():
+    """
+    現在の盤面を受け取り、対戦相手(Alnya's OthelloAction)の手と、
+    打った後の盤面を返すエンドポイント。
+
+    :return: 対戦相手の手と打った後の盤面のjsonデータ
+    """
     board = posted_board(request.form['num'])
     if isinstance(board, str):
         return board
-    # moves = getMoves(board=deepcopy(board), player=-1, size=8)
     moves = getMoves(board=getReverseboard(deepcopy(board)), player=1, size=8)
     if len(moves) == 0:
         data = {
@@ -60,7 +77,6 @@ def post():
             'board': board
         }
         return jsonify(data)
-    # action = getAction(board=deepcopy(board), moves=moves)
     action = getAction(board=getReverseboard(deepcopy(board)), moves=moves)
     board = execute(board=deepcopy(board), action=action, player=-1, size=8)
     data = {
@@ -73,6 +89,11 @@ def post():
 @app.route('/get_moves', methods=['POST'])
 @cross_origin(support_credentials=True)
 def get_moves():
+    """
+    現在の盤面を受け取り、プレイヤーの合法手を返すエンドポイント。
+
+    :return: 現在の盤面でのプレイヤーの合法手のjsonデータ
+    """
     board = posted_board(request.form['num'])
     if isinstance(board, str):
         return board
@@ -86,6 +107,11 @@ def get_moves():
 @app.route('/player_execute', methods=['POST'])
 @cross_origin(support_credentials=True)
 def player_execute():
+    """
+    現在の盤面とプレイヤーの手を受け取り、実行した後の盤面を返すエンドポイント。
+
+    :return: 実行後の盤面のjsonデータ
+    """
     board = posted_board(request.form['num'])
     if isinstance(board, str):
         return board
@@ -101,6 +127,9 @@ def player_execute():
 @app.route('/check', methods=['POST'])
 @cross_origin(support_credentials=True)
 def check():
+    """
+    デバッグ用エンドポイント。
+    """
     board = posted_board(request.form['num'])
     if isinstance(board, str):
         return board
