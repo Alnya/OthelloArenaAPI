@@ -1,44 +1,69 @@
 """
-引数について
+getActionの引数について
 
 board:現在の盤面の状態
 moves:現在の合法手の一覧
-
-詳しい説明はサイトのHomeページをご覧ください。
 
 """
 
 # strong
 
 import OthelloLogic as Ol
+# オセロのロジックに関するライブラリの読み込み
 import copy
 import time
 
+dangers = [
+    [1, 0],
+    [1, 1],
+    [0, 1],
+
+    [1, 7],
+    [0, 6],
+    [1, 6],
+
+    [7, 6],
+    [6, 6],
+    [6, 7],
+
+    [6, 0],
+    [7, 1],
+    [6, 1]
+]
+# 盤面の各角周り3マスを格納した二次元リスト
+# 序盤～中盤ではこのマスに置かないようにして進めていく（角を取られてしまうため）
+
+list_first = [
+    [0, 0],
+    [7, 0],
+    [7, 7],
+    [0, 7]
+]
+# 盤面の各角を格納した二次元リスト
+# 序盤～中盤ではこのマスが取れるときは積極的に取っていく
+
 
 def getAction(board, moves):
+    """
+    メインアプリケーションの関数から呼ばれる関数。
+    盤面情報と合法手をそれぞれ二次元リストとして引数に渡すことで、
+    最善手を返すアルゴリズム。
+
+    :param board: 現在の盤面の状態
+    :type board: list of list of int
+
+    :param moves: 現在の合法手の一覧
+    :type moves: list of list of int
+
+    :return: 導き出した最善手
+    :rtype: list of int
+    """
+
     start_time = time.time()
     turn = 61
     for i in board:
         turn -= i.count(0)
-    # 先手turn:1 後手turn:2
-
-    dangers = [
-        [1, 0],
-        [1, 1],
-        [0, 1],
-
-        [1, 7],
-        [0, 6],
-        [1, 6],
-
-        [7, 6],
-        [6, 6],
-        [6, 7],
-
-        [6, 0],
-        [7, 1],
-        [6, 1]
-    ]
+    # 先手はturn:2n+1 後手はturn:2n+2 (n=0,1,2...)
 
     # print("--------------------------------------------------")
     # print(f"turn: {turn}")
@@ -67,12 +92,19 @@ def getAction(board, moves):
         return move
     else:
         return complete_main(board, moves, turn, start_time)
-
-    # elif turn < 50:
-    #     return middle_main(board, moves, turn, start_time)
+    # turnによって使用するアルゴリズムを分ける。
+    # 1:特になし。
+    # 2:「縦取り」と呼ばれる定石。
+    # 3:「兎定石」と呼ばれる定石。
+    # 4～14:「開放度」という概念を重視したアルゴリズム。序盤に特に有効。
+    # 15～47:辺、角を取りやすいように意識したアルゴリズム。
+    # 48～:条件付きで深さ優先探索ベースでminMAX法を応用したアルゴリズム。
 
 
 def complete_main(board, moves, turn, start_time):
+    """
+    デバッグ用に、今どのアルゴリズムを使用しているかをコンソールに出力するための関数
+    """
     move, rate = complete(board, moves, turn, 1)
     if rate == 0:
         # print(f"theory_rate: 0.00 %\nSo, I changed the algorithm.")
@@ -86,6 +118,9 @@ def complete_main(board, moves, turn, start_time):
 
 
 def middle_main(board, moves, turn, start_time):
+    """
+    デバッグ用に、今どのアルゴリズムを使用しているかをコンソールに出力するための関数
+    """
     move, message = middle_check(board, moves)
     # if message == "middle_check!":
     #     print(f"turn: {turn}\nmiddle_check: {message}")
@@ -100,6 +135,9 @@ def middle_main(board, moves, turn, start_time):
 
 
 def open_rate_main(board, moves, turn, start_time):
+    """
+    デバッグ用に、今どのアルゴリズムを使用しているかをコンソールに出力するための関数
+    """
     move, rate = open_rate(board, moves)
     # if type(rate) == str:
     #     print(f"turn: {turn}\n{rate}")
@@ -111,13 +149,42 @@ def open_rate_main(board, moves, turn, start_time):
 
 
 def complete(board, moves, turn, player):
+    """
+    深さ優先探索ベースでminMAX法を応用したアルゴリズム。
+    考え方は、ゲーム理論を参考にしている。
+    早ければ計算量O(n^((60-turn)/2))、
+    最悪計算量はO(n^(61-turn)/2)。
+
+    :param board: 現在の盤面の状態
+    :type board: list of list of int
+
+    :param moves: 現在の合法手の一覧
+    :type moves: list of list of int
+
+    :param turn:　現在のターン数
+    :type turn: int
+
+    :param player: 再帰中で今自分のターンなのか相手のターンなのかを管理
+                   1なら自分、-1なら相手のターン
+    :type player: int
+
+    :return: ans_move: 最善手, rate: 勝率
+    :rtype: list of int, int
+
+    """
+
     tmp_board = copy.deepcopy(board)
+    # Pythonでは、関数の引数にリストをそのまま渡しても、オブジェクトIDが同一のため、
+    # 参照渡しと同じ扱いになってしまう。そのため、DFSで再帰する当関数ではdeepcopyをして盤面情報を更新する。
+
     if len(moves) == 0:
         player *= -1
         moves = Ol.getMoves(board, player, 8)
+        # 打てる手が無い時はplayerを交代する。
     if len(moves) == 0:
         rate = win_rate(board)
         return None, rate
+        # 両者とも打てる手が無い時は探索を終了する。
 
     ans_move = moves[0]
 
@@ -125,6 +192,7 @@ def complete(board, moves, turn, player):
         next_board = Ol.execute(tmp_board, ans_move, player, 8)
         rate = win_rate(next_board)
         return ans_move, rate
+        # 最後のターンまで来たらそのまま最善手と勝率を返す。
 
     w_rate = 0
     l_rate = 1
@@ -137,18 +205,22 @@ def complete(board, moves, turn, player):
         next_board = Ol.execute(tmp_board, move, player, 8)
         next_moves = Ol.getMoves(next_board, player * -1, 8)
         next_move, next_rate = complete(next_board, next_moves, turn + 1, player * -1)
+        # ここでDFS、再帰。
 
-        # 2021/01/09追加
+        # 2021/01/09追加、ゲーム理論に準じたアルゴリズム
         if player == 1 and next_rate == 1:
             return move, next_rate
+            # 自分のターンで、勝率が1ならその時点で返す。
         elif player == -1 and next_rate == 0:
             return None, next_rate
+            # 相手のターンで、勝率が0(相手からすると1)ならその時点で返す。
 
         if w_rate < next_rate:
             w_rate = next_rate
             ans_move = move
         if l_rate > next_rate:
             l_rate = next_rate
+        # 勝率がより高い時に返却値を更新
 
     if player == 1:
         return ans_move, w_rate
@@ -157,6 +229,16 @@ def complete(board, moves, turn, player):
 
 
 def win_rate(board):
+    """
+    現時点で自分が勝っているのか負けているのかを返す関数。
+
+    :param board: 現在の盤面の状態
+    :type board: list of list of int
+
+    :return: 自分が勝っているなら1、負けているなら0
+    :rtype: int
+    """
+
     my_stone = 0
     enemy_stone = 0
     for i in board:
@@ -169,30 +251,18 @@ def win_rate(board):
 
 
 def open_rate(board, moves):
-    danger = [
-        [1, 0],
-        [1, 1],
-        [0, 1],
+    """
+    「開放度」という概念を重視したアルゴリズム。序盤に特に有効。
 
-        [1, 7],
-        [0, 6],
-        [1, 6],
+    :param board: 現在の盤面の状態
+    :type board: list of list of int
 
-        [7, 6],
-        [6, 6],
-        [6, 7],
+    :param moves: 現在の合法手の一覧
+    :type moves: list of list of int
 
-        [6, 0],
-        [7, 1],
-        [6, 1]
-    ]
-
-    list_first = [
-        [0, 0],
-        [7, 0],
-        [7, 7],
-        [0, 7]
-    ]
+    :return: 導き出した最善手
+    :rtype: list of int
+    """
 
     del_ls = []
     for i in range(4):
@@ -200,10 +270,11 @@ def open_rate(board, moves):
             del_ls.append(i)
     for i in del_ls:
         for j in range(i * 3, (i * 3) + 3):
-            list_first.append(danger[j])
+            list_first.append(dangers[j])
     del_ls.sort(reverse=True)
     for i in del_ls:
-        del danger[(i * 3):((i * 3) + 3)]
+        del dangers[(i * 3):((i * 3) + 3)]
+    # 角周り三つは、各角がそれぞれ自分が取っていたならば、その角周りは安全なので優先的に取っていく。
 
     vectors = [
         [-1, -1],
@@ -220,7 +291,7 @@ def open_rate(board, moves):
     ans_rate = 100
 
     for move in moves:
-        if move in danger:
+        if move in dangers:
             continue
         elif move in list_first:
             return move, "great!"
@@ -245,11 +316,17 @@ def open_rate(board, moves):
 
     if ans_rate == 100:
         return open_rate_exception(board, moves)
+        # 全ての合法手が危険な手だった場合、最も危険度が低い手を返すために別の関数へ。
     else:
         return ans_move, ans_rate
 
 
 def open_rate_exception(board, moves):
+    """
+    open_rateにおいて、全ての合法手が危険な手だった場合に呼ばれる。
+    最も危険度が低い手を返す。
+    """
+
     message = "open_rate_exception: success!"
 
     danger = [
@@ -257,13 +334,6 @@ def open_rate_exception(board, moves):
         [1, 6],
         [6, 1],
         [6, 6]
-    ]
-
-    list_first = [
-        [0, 0],
-        [7, 0],
-        [7, 7],
-        [0, 7]
     ]
 
     ans_move = moves[0]
@@ -288,6 +358,19 @@ def open_rate_exception(board, moves):
 
 
 def middle_check(board, moves):
+    """
+    辺、角を取りやすいように意識したアルゴリズム。
+
+    :param board: 現在の盤面の状態
+    :type board: list of list of int
+
+    :param moves: 現在の合法手の一覧
+    :type moves: list of list of int
+
+    :return: 導き出した最善手
+    :rtype: list of int
+    """
+
     left_ls = [
         [0, 0],
         [0, 1],
@@ -333,31 +416,7 @@ def middle_check(board, moves):
     ]
 
     ls_manager = [up_ls, down_ls, left_ls, right_ls]
-
-    danger = [
-        [1, 0],
-        [1, 1],
-        [0, 1],
-
-        [1, 7],
-        [0, 6],
-        [1, 6],
-
-        [7, 6],
-        [6, 6],
-        [6, 7],
-
-        [6, 0],
-        [7, 1],
-        [6, 1]
-    ]
-
-    list_first = [
-        [0, 0],
-        [7, 0],
-        [7, 7],
-        [0, 7]
-    ]
+    # 上下左右それぞれの辺のリストと、それらを管理するリスト。
 
     del_ls = []
     for i in range(4):
@@ -365,13 +424,14 @@ def middle_check(board, moves):
             del_ls.append(i)
     for i in del_ls:
         for j in range(i * 3, (i * 3) + 3):
-            list_first.append(danger[j])
+            list_first.append(dangers[j])
     del_ls.sort(reverse=True)
     for i in del_ls:
-        del danger[(i * 3):((i * 3) + 3)]
+        del dangers[(i * 3):((i * 3) + 3)]
+    # 角周り三つは、各角がそれぞれ自分が取っていたならば、その角周りは安全なので優先的に取っていく。
 
     for move in moves:
-        if move in danger:
+        if move in dangers:
             continue
         elif move in list_first:
             return move, "middle_check!"
@@ -400,9 +460,13 @@ def middle_check(board, moves):
                         return move, "middle_check!"
 
     return open_rate(board, moves)
+    # 良い場所に置けなかった場合、開放度を意識したアルゴリズムへ変更。
 
 
 def for_middle_check(board, ls):
+    """
+    middle_checkで盤面の辺の状況を把握するための関数
+    """
     ans = 0
     for i in ls:
         ans += board[i[1]][i[0]]
@@ -410,6 +474,9 @@ def for_middle_check(board, ls):
 
 
 def turn2(board):
+    """
+    2ターン目の時限定で「縦取り」と呼ばれる定石を置く関数。
+    """
     t2b = [
         [4, 5],
         [5, 4],
@@ -431,6 +498,9 @@ def turn2(board):
 
 
 def turn3(board):
+    """
+    3ターン目の時限定で「兎定石」と呼ばれる定石を置く関数。
+    """
     t3b = [
         [4, 5],
         [5, 4],
@@ -452,6 +522,9 @@ def turn3(board):
 
 
 def max_move(board, moves):
+    """
+    考えられる手の中で一番多くの石が取れる手を返す。
+    """
     ans_move = moves[0]
     max_score = get_score(Ol.execute(board=copy.deepcopy(board), action=moves[0], player=1, size=8))
     for move in moves:
@@ -463,6 +536,9 @@ def max_move(board, moves):
 
 
 def get_score(board):
+    """
+    現在の盤面での自分の石の数を返す。
+    """
     score = 0
     for i in board:
         score += i.count(1)
