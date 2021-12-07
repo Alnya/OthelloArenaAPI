@@ -90,7 +90,7 @@ def post():
 
 @app.route('/post_weak', methods=['POST'])
 @cross_origin(support_credentials=True)
-def post():
+def post_weak():
     """
     現在の盤面を受け取り、対戦相手(Alnya's OthelloActionWeak)の手と、
     打った後の盤面を返すエンドポイント。
@@ -118,7 +118,7 @@ def post():
 
 @app.route('/post_middle', methods=['POST'])
 @cross_origin(support_credentials=True)
-def post():
+def post_middle():
     """
     現在の盤面を受け取り、対戦相手(Alnya's OthelloAction)の手と、
     打った後の盤面を返すエンドポイント。
