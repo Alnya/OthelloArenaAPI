@@ -41,6 +41,8 @@ list_first = [
     [7, 7],
     [0, 7]
 ]
+
+
 # 盤面の各角を格納した二次元リスト
 # 序盤～中盤ではこのマスが取れるときは積極的に取っていく
 
@@ -424,9 +426,13 @@ def middle_check(board, moves):
     for i in range(4):
         if board[list_first[i][0]][list_first[i][1]] == 1:
             del_ls.append(i)
-    for i in del_ls:
-        for j in range(i * 3, (i * 3) + 3):
-            list_first.append(dangers[j])
+
+    try:
+        for i in del_ls:
+            for j in range(i * 3, (i * 3) + 3):
+                list_first.append(dangers[j])
+    except IndexError:
+        pass
     del_ls.sort(reverse=True)
     for i in del_ls:
         del dangers[(i * 3):((i * 3) + 3)]
