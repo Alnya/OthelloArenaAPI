@@ -8,7 +8,7 @@ moves:現在の合法手の一覧
 
 """
 
-# strong
+# middle
 
 import OthelloLogic as Ol
 # オセロのロジックに関するライブラリの読み込み
@@ -268,16 +268,34 @@ def open_rate(board, moves):
     :rtype: list of int
     """
 
+    danger = [
+        [1, 0],
+        [1, 1],
+        [0, 1],
+
+        [1, 7],
+        [0, 6],
+        [1, 6],
+
+        [7, 6],
+        [6, 6],
+        [6, 7],
+
+        [6, 0],
+        [7, 1],
+        [6, 1]
+    ]
+
     del_ls = []
     for i in range(4):
         if board[list_first[i][0]][list_first[i][1]] == 1:
             del_ls.append(i)
     for i in del_ls:
         for j in range(i * 3, (i * 3) + 3):
-            list_first.append(dangers[j])
+            list_first.append(danger[j])
     del_ls.sort(reverse=True)
     for i in del_ls:
-        del dangers[(i * 3):((i * 3) + 3)]
+        del danger[(i * 3):((i * 3) + 3)]
     # 角周り三つは、各角がそれぞれ自分が取っていたならば、その角周りは安全なので優先的に取っていく。
 
     vectors = [
@@ -295,7 +313,7 @@ def open_rate(board, moves):
     ans_rate = 100
 
     for move in moves:
-        if move in dangers:
+        if move in danger:
             continue
         elif move in list_first:
             return move, "great!"
@@ -375,6 +393,24 @@ def middle_check(board, moves):
     :rtype: list of int
     """
 
+    danger = [
+        [1, 0],
+        [1, 1],
+        [0, 1],
+
+        [1, 7],
+        [0, 6],
+        [1, 6],
+
+        [7, 6],
+        [6, 6],
+        [6, 7],
+
+        [6, 0],
+        [7, 1],
+        [6, 1]
+    ]
+
     left_ls = [
         [0, 0],
         [0, 1],
@@ -426,16 +462,20 @@ def middle_check(board, moves):
     for i in range(4):
         if board[list_first[i][0]][list_first[i][1]] == 1:
             del_ls.append(i)
-    for i in del_ls:
-        for j in range(i * 3, (i * 3) + 3):
-            list_first.append(dangers[j])
+
+    try:
+        for i in del_ls:
+            for j in range(i * 3, (i * 3) + 3):
+                list_first.append(danger[j])
+    except IndexError:
+        pass
     del_ls.sort(reverse=True)
     for i in del_ls:
-        del dangers[(i * 3):((i * 3) + 3)]
+        del danger[(i * 3):((i * 3) + 3)]
     # 角周り三つは、各角がそれぞれ自分が取っていたならば、その角周りは安全なので優先的に取っていく。
 
     for move in moves:
-        if move in dangers:
+        if move in danger:
             continue
         elif move in list_first:
             return move, "middle_check!"
