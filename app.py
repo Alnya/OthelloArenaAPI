@@ -5,6 +5,7 @@ from flask import request, jsonify
 from flask_cors import CORS, cross_origin
 from OthelloLogic import getMoves, execute, getReverseboard
 from OthelloAction import getAction
+import OthelloActionWeak
 from copy import deepcopy
 
 app = Flask(__name__)
@@ -78,6 +79,34 @@ def post():
         }
         return jsonify(data)
     action = getAction(board=getReverseboard(deepcopy(board)), moves=moves)
+    board = execute(board=deepcopy(board), action=action, player=-1, size=8)
+    data = {
+        'action': action,
+        'board': board
+    }
+    return jsonify(data)
+
+
+@app.route('/post_weak', methods=['POST'])
+@cross_origin(support_credentials=True)
+def post():
+    """
+    現在の盤面を受け取り、対戦相手(Alnya's OthelloActionWeak)の手と、
+    打った後の盤面を返すエンドポイント。
+
+    :return: 対戦相手の手と打った後の盤面のjsonデータ
+    """
+    board = posted_board(request.form['num'])
+    if isinstance(board, str):
+        return board
+    moves = getMoves(board=getReverseboard(deepcopy(board)), player=1, size=8)
+    if len(moves) == 0:
+        data = {
+            'action': [],
+            'board': board
+        }
+        return jsonify(data)
+    action = OthelloActionWeak.getAction(board=getReverseboard(deepcopy(board)), moves=moves)
     board = execute(board=deepcopy(board), action=action, player=-1, size=8)
     data = {
         'action': action,
